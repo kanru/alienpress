@@ -1,4 +1,4 @@
-;;;; packages.lisp --- Alienpress Packages
+;;;; db.lisp --- Metadata Database
 
 ;;; Copyright (C) 2012  Kan-Ru Chen
 
@@ -28,25 +28,40 @@
 
 ;;;; Code:
 
-(in-package #:cl-user)
+;;; File
 
-(defpackage #:alienpress
-  (:use #:cl)
-  (:import-from #:fad
-                #:directory-pathname-p
-                #:pathname-as-directory
-                #:walk-directory)
-  (:import-from #:marshal
-                #:marshal
-                #:unmarshal)
-  (:import-from #:alexandria
-                #:doplist
-                #:plist-alist
-                #:assoc-value)
-  (:import-from #:mustache
-                #:mustache-compile))
+(defclass file-info ()
+  ((mtime :initarg :mtime
+          :accessor mtime)
+   (pathname :initarg :name
+             :accessor name))
+  (:documentation "File information that needs to be kept."))
 
-;;; packages.lisp ends here
+(defmethod print-object ((object file-info) stream)
+  (prin1 (list `(:pathname ,(name object)
+                 :mtime ,(mtime object))) stream))
+
+(defmethod marshal:class-persistant-slots ((class file-info))
+  '(mtime pathname))
+
+(defun file-list-of (site)
+  (let (list)
+    (walk-directory (make-pathname :directory (srcdir site))
+                    (lambda (p)
+                      (when (not (directory-pathname-p p))
+                        (push (make-instance
+                              'file-info
+                              :mtime (file-write-date p)
+                              :name p)
+                             list)))
+                    :directories :breadth-first
+                    :test (lambda (name)
+                            (let ((name (or (pathname-name name)
+                                            (car (last (pathname-directory name))))))
+                              (not (char= #\. (char name 0))))))
+    list))
+
+;;; db.lisp ends here
 
 ;;; Local Variables:
 ;;; mode: lisp

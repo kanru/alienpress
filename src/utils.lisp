@@ -30,37 +30,6 @@
 
 (in-package #:alienpress)
 
-(defclass file-info ()
-  ((mtime :initarg :mtime
-          :accessor mtime)
-   (pathname :initarg :name
-             :accessor name))
-  (:documentation "File information that needs to be kept."))
-
-(defmethod print-object ((object file-info) stream)
-  (prin1 (list `(:pathname ,(name object)
-                 :mtime ,(mtime object))) stream))
-
-(defmethod marshal:class-persistant-slots ((class file-info))
-  '(mtime pathname))
-
-(defun file-list-of (site)
-  (let (list)
-    (walk-directory (make-pathname :directory (srcdir site))
-                    (lambda (p)
-                      (when (not (directory-pathname-p p))
-                        (push (make-instance
-                              'file-info
-                              :mtime (file-write-date p)
-                              :name p)
-                             list)))
-                    :directories :breadth-first
-                    :test (lambda (name)
-                            (let ((name (or (pathname-name name)
-                                            (car (last (pathname-directory name))))))
-                              (not (char= #\. (char name 0))))))
-    list))
-
 (defmacro with-cache-file ((var filename site) &body body)
   (let ((cache-dir (gensym)))
     `(let* ((,cache-dir (or (cache-dir ,site)

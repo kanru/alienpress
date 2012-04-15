@@ -36,6 +36,12 @@
     (save-cache current "files" site)
     (list cache current)))
 
+(defun select-template (site file-info)
+  (mustache-compile
+   (make-pathname :name "default"
+                  :type mustache:*default-pathname-type*
+                  :directory (templatedir site))))
+
 ;;; alienpress.lisp ends here
 
 ;;; Local Variables:

@@ -39,16 +39,20 @@
    (title :initarg :title
           :accessor title)
    (srcdir :initarg :srcdir
+           :initform nil
            :accessor srcdir)
    (destdir :initarg :destdir
+            :initform nil
             :accessor destdir)
    (baseurl :initarg :baseurl
             :accessor baseurl)
    (plugins :initarg :plugins
             :accessor plugins)
    (templatedir :initarg :templatedir
+                :initform nil
                 :accessor templatedir)
    (basedir :initarg :basedir
+            :initform nil
             :accessor basedir)
    (options :initarg :options
             :initform nil
@@ -60,23 +64,33 @@
   (let ((site (gensym)))
     `(let ((,site (make-site ,(string name)
                              ',options)))
-       (ensure-dir ,site)
-       (pushnew ,site *site-list*)
+       (ensure-site-directory ,site (dirname *load-pathname*))
+       (push ,site *site-list*)
        ,site)))
 
-(defmacro ensure-dir (site)
-  `(progn
-     (setf (basedir ,site)
-           (pathname-directory
-            (or *load-truename* *compile-file-truename*)))
-     (let ((srcdir (pathname-directory (pathname-as-directory (srcdir ,site)))))
-       (if (eql :relative (car srcdir))
-           (setf (srcdir ,site) (append (basedir ,site) (cdr srcdir)))
-           (setf (srcdir ,site) srcdir)))
-     (let ((destdir (pathname-directory (pathname-as-directory (destdir ,site)))))
-       (if (eql :relative (car destdir))
-           (setf (destdir ,site) (append (basedir ,site) (cdr destdir)))
-           (setf (destdir ,site) destdir)))))
+(defun dirname (pathname)
+  (make-pathname :directory (pathname-directory pathname)))
+
+(defun absolute-directory-p (pathname)
+  (eql :absolute (car (pathname-directory pathname))))
+
+(defun ensure-absolute-directory (pathname &optional default-pathname)
+  (if (null pathname)
+      default-pathname
+      (if (absolute-directory-p pathname)
+          pathname
+          (pathname-as-directory
+           (merge-pathnames pathname default-pathname)))))
+
+(defun ensure-site-directory (site default-pathname)
+  (with-accessors ((base basedir)
+                   (srcd srcdir)
+                   (dest destdir)
+                   (tmpl templatedir)) site
+    (setf base (ensure-absolute-directory base default-pathname))
+    (setf srcd (ensure-absolute-directory srcd base))
+    (setf dest (ensure-absolute-directory dest base))
+    (setf tmpl (ensure-absolute-directory tmpl base))))
 
 (defun make-site (name options)
   (let ((site (make-instance 'site :name name)))

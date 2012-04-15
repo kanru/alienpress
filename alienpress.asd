@@ -7,7 +7,8 @@
                 :components ((:file "packages")
                              (:file "config" :depends-on ("packages"))
                              (:file "utils" :depends-on ("config"))
-                             (:file "alienpress" :depends-on ("utils")))))
+                             (:file "db" :depends-on ("packages"))
+                             (:file "alienpress" :depends-on ("utils" "db")))))
   :depends-on ("cl-mustache"
                "cl-markdown"
                "cl-fad"
