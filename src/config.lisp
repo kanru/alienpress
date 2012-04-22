@@ -109,7 +109,7 @@
 
 (defun cache-dir (site)
   (merge-pathnames #P".alienpress/"
-                   (make-pathname :directory (srcdir site))))
+                   (srcdir site)))
 
 ;;; config.lisp ends here
 

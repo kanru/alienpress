@@ -31,16 +31,39 @@
 (in-package #:alienpress)
 
 (defun compile-site (site)
-  (let ((cache (read-cache "files" site))
-        (current (file-list-of site)))
-    (save-cache current "files" site)
-    (list cache current)))
+  (let* ((cache (read-cache "files" site))
+         (current (file-list-of site))
+         (changed (changed-files cache current)))
+    (loop :for file-info :in changed
+          :do
+             (compile-page site file-info))
+    (save-cache current "files" site)))
 
 (defun select-template (site file-info)
   (mustache-compile
    (make-pathname :name "default"
                   :type mustache:*default-pathname-type*
-                  :directory (templatedir site))))
+                  :defaults (templatedir site))))
+
+;; TODO
+(defun changed-files (oldlist newlist)
+  newlist)
+
+;; TODO
+(defun output-dir (site input-file)
+  (pathname-directory (destdir site)))
+
+(defun compile-page (site file-info)
+  (let* ((tmpl (select-template site file-info))
+         (input-file (path file-info))
+         (output-file (make-pathname :name (pathname-name input-file)
+                                     :directory (output-dir site input-file)
+                                     :type "html"))
+         (mdwn (markdown:markdown input-file :stream nil :format :none)))
+    (with-open-file (output output-file :direction :output :if-exists :supersede)
+      (let ((mustache:*mustache-output* output))
+        (funcall tmpl `((:title . "Test")
+                        (:content . ,(markdown:render-to-stream mdwn :html nil))))))))
 
 ;;; alienpress.lisp ends here
 
