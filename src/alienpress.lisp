@@ -30,6 +30,15 @@
 
 (in-package #:alienpress)
 
+(defvar *verbose* t
+  "Enable verbose output if non-nil")
+
+(defun logging (control-string &rest args)
+  (when *verbose*
+    (format t "* ")
+    (apply #'format t control-string args)
+    (format t "~%")))
+
 (defun compile-site (site)
   (let* ((cache (read-cache "files" site))
          (current (file-list-of site))
@@ -40,10 +49,11 @@
     (save-cache current "files" site)))
 
 (defun select-template (site file-info)
-  (mustache-compile
-   (make-pathname :name "default"
-                  :type mustache:*default-pathname-type*
-                  :defaults (templatedir site))))
+  (let ((pathname (make-pathname :name "default"
+                                 :type mustache:*default-pathname-type*
+                                 :defaults (templatedir site))))
+    (logging "  select template ~A" pathname)
+    (mustache-compile pathname)))
 
 ;; TODO
 (defun changed-files (oldlist newlist)
@@ -54,12 +64,14 @@
   (pathname-directory (destdir site)))
 
 (defun compile-page (site file-info)
+  (logging "compile page ~a" (path file-info))
   (let* ((tmpl (select-template site file-info))
          (input-file (path file-info))
          (output-file (make-pathname :name (pathname-name input-file)
                                      :directory (output-dir site input-file)
                                      :type "html"))
          (mdwn (markdown:markdown input-file :stream nil :format :none)))
+    (logging "  output file ~a" output-file)
     (with-open-file (output output-file :direction :output :if-exists :supersede)
       (let ((mustache:*mustache-output* output))
         (funcall tmpl `((:title . "Test")
