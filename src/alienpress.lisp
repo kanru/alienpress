@@ -33,7 +33,7 @@
 (defvar *verbose* t
   "Enable verbose output if non-nil")
 
-(defun logging (control-string &rest args)
+(defun info (control-string &rest args)
   (when *verbose*
     (format t "* ")
     (apply #'format t control-string args)
@@ -52,7 +52,7 @@
   (let ((pathname (make-pathname :name "default"
                                  :type mustache:*default-pathname-type*
                                  :defaults (templatedir site))))
-    (logging "  select template ~A" pathname)
+    (info "  select template ~A" pathname)
     (mustache-compile pathname)))
 
 ;; TODO
@@ -64,14 +64,16 @@
   (pathname-directory (destdir site)))
 
 (defun compile-page (site file-info)
-  (logging "compile page ~a" (path file-info))
+  (info "compile page ~a" (path file-info))
   (let* ((tmpl (select-template site file-info))
          (input-file (path file-info))
          (output-file (make-pathname :name (pathname-name input-file)
                                      :directory (output-dir site input-file)
                                      :type "html"))
-         (mdwn (markdown:markdown input-file :stream nil :format :none)))
-    (logging "  output file ~a" output-file)
+         (article (read-article input-file))
+         (mdwn (markdown:markdown (process-article article)
+                                  :stream nil :format :none)))
+    (info "  output file ~a" output-file)
     (with-open-file (output output-file :direction :output :if-exists :supersede)
       (let ((mustache:*mustache-output* output))
         (funcall tmpl `((:title . "Test")

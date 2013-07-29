@@ -49,6 +49,7 @@
 
 ;;;; Predefined directives
 
+;;; FIXME Use alexandria:doplist
 (defun meta-directive (&rest keyword-args)
   (labels ((position-skip (chars sequence &key start)
              (position-if (lambda (char) (not (member char chars)))

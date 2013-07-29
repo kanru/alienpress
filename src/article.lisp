@@ -41,7 +41,9 @@
   (publish-time  "" :type string)
   (update-time   "" :type string)
   (id            "" :type string)
-  (tags          () :type list))
+  (tags          () :type list)
+  (ast           () :type list)
+  (html          "" :type string))
 
 ;;; article.lisp ends here
 

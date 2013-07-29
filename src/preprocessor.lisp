@@ -31,12 +31,15 @@
 (in-package :alienpress)
 
 (defmacro with-temp-package (&body body)
+  "Create a temporary package so we don't read into our package."
   `(let ((*package* (make-package (gensym "PACKAGE"))))
      (unwind-protect
           (progn ,@body)
        (delete-package *package*))))
 
 (defun read-article (&optional (stream *standard-input*))
+  "Reads article from STREAM then outputs the article's abstract
+syntax tree."
   (with-open-stream (collector (make-string-output-stream))
     (labels ((process-char (output)
                (let ((c (read-char stream nil)))
@@ -67,12 +70,33 @@
       (with-temp-package
         (process-char nil)))))
 
-(defun process-article (ast)
+(defun eval-article-ast (ast)
+  "Processes the article's AST and outputs the final? article string."
   (with-output-to-string (out-stream)
     (loop :for node :in ast :do
       (etypecase node
         (string (write-string node out-stream))
         (list (write-string (eval-directive node) out-stream))))))
+
+;;; TODO Add hook
+(defun markdown-to-html (markdown)
+  "Translate MARKDOWN string to html."
+  (let ((ast (markdown:markdown markdown
+                                :stream nil :format :none)))
+    (markdown:render-to-stream ast :html nil)))
+
+(defun file-to-article (file)
+  (with-open-file (in file)
+    (let ((*current-article* (make-article))
+          (ast (read-article in)))
+      (setf (article-ast *current-article*) ast
+            (article-html *current-article*)
+            (markdown-to-html (eval-article-ast ast)))
+      *current-article*)))
+
+(defun apply-template (content template context)
+  (let ((context (acons :content content context)))
+    (mustache:mustache-render-to-string template context)))
 
 ;;; preprocessor.lisp ends here
 
