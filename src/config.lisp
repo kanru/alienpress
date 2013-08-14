@@ -48,25 +48,21 @@
             :accessor baseurl)
    (plugins :initarg :plugins
             :accessor plugins)
-   (templatedir :initarg :templatedir
-                :initform nil
-                :accessor templatedir)
-   (basedir :initarg :basedir
-            :initform nil
-            :accessor basedir)
    (options :initarg :options
             :initform nil
             :accessor options)))
 
-(defmacro defsite (name &body options)
-  (when (not (zerop (rem (length options) 2)))
-    (error "Odd number of options"))
-  (let ((site (gensym)))
-    `(let ((,site (make-site ,(string name)
-                             ',options)))
-       (ensure-site-directory ,site (dirname *load-pathname*))
-       (push ,site *site-list*)
-       ,site)))
+(defun defsite (name &rest options)
+  (assert (evenp (length options))
+          (options) "Odd number of options ~A" options)
+  (let ((site (make-site name options)))
+    (print *load-pathname*)
+    (print *compile-file-pathname*)
+    (ensure-site-directory site (dirname (or *load-pathname*
+                                             *compile-file-pathname*
+                                             *default-pathname-defaults*)))
+    (push site *site-list*)
+    site))
 
 (defun dirname (pathname)
   (make-pathname :directory (pathname-directory pathname)))
@@ -79,7 +75,7 @@
       default-pathname
       (if (absolute-directory-p pathname)
           pathname
-          (pathname-as-directory
+          (fad:pathname-as-directory
            (merge-pathnames pathname default-pathname)))))
 
 (defun ensure-site-directory (site default-pathname)
