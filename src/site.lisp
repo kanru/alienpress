@@ -74,6 +74,22 @@
   (merge-pathnames (make-pathname :directory '(:relative ".alienpress"))
                    (site-sitedir site)))
 
+(defun site-source-files (site)
+  "Return a list of files."
+  (let (list)
+    (labels ((add-file-to-list (pathname)
+               (when (pathname-name pathname)
+                 (push pathname list)))
+             (not-hidden (pathname)
+               (let ((name (or (pathname-name pathname)
+                               (car (last (pathname-directory pathname))))))
+                 (not (char= #\. (char name 0))))))
+      (fad:walk-directory
+       (site-source-dir site) #'add-file-to-list
+       :directories :breadth-first
+       :test #'not-hidden))
+    list))
+
 ;;; config.lisp ends here
 
 ;;; Local Variables:
