@@ -65,6 +65,19 @@
       (make-pathname :directory (cons :relative (subseq orig-dir pos))
                      :defaults orig))))
 
+(defun pathname-absolute-p (pathname)
+  (eql :absolute (car (pathname-directory pathname))))
+
+(defun absolute-directory (pathname &optional (default-pathname *default-pathname-defaults*))
+  "Return the PATHNAME in absolute form."
+  (let ((pathname (pathname (or pathname default-pathname))))
+    (cond
+      ((pathname-absolute-p pathname)
+       (fad:pathname-as-directory pathname))
+      (t
+       (fad:pathname-as-directory
+        (merge-pathnames pathname default-pathname))))))
+
 ;;; utils.lisp ends here
 
 ;;; Local Variables:

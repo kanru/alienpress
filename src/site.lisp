@@ -55,17 +55,6 @@
   (print-unreadable-object (object stream :type t :identity t)
     (princ (site-name object) stream)))
 
-(defun absolute-pathname-p (pathname)
-  (eql :absolute (car (pathname-directory pathname))))
-
-(defun absolute-directory (pathname &optional (default-pathname *default-pathname-defaults*))
-  "Return the PATHNAME in absolute form."
-  (let ((pathname (pathname (or pathname default-pathname))))
-    (cond
-      ((absolute-pathname-p pathname) pathname)
-      (t (fad:pathname-as-directory
-          (merge-pathnames pathname default-pathname))))))
-
 (defun ensure-absolute-site-directory (site)
   "Ensure the directories in SITE is absolute."
   (with-accessors ((srcdir site-srcdir)
