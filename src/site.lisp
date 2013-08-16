@@ -35,9 +35,9 @@
 (defclass site ()
   ((name :initarg :name
          :accessor site-name)
-   (srcdir :initarg :srcdir
-           :initform nil
-           :accessor site-srcdir)
+   (sitedir :initarg :sitedir
+            :initform nil
+            :accessor site-sitedir)
    (destdir :initarg :destdir
             :initform nil
             :accessor site-destdir)
@@ -57,14 +57,22 @@
 
 (defun ensure-absolute-site-directory (site)
   "Ensure the directories in SITE is absolute."
-  (with-accessors ((srcdir site-srcdir)
+  (with-accessors ((sitedir site-sitedir)
                    (destdir site-destdir)) site
-    (setf srcdir  (absolute-directory srcdir))
+    (setf sitedir (absolute-directory sitedir))
     (setf destdir (absolute-directory destdir))))
+
+(defun site-source-dir (site)
+  (merge-pathnames (make-pathname :directory '(:relative "source"))
+                   (site-sitedir site)))
+
+(defun site-template-dir (site)
+  (merge-pathnames (make-pathname :directory '(:relative "template"))
+                   (site-sitedir site)))
 
 (defun site-cache-dir (site)
   (merge-pathnames (make-pathname :directory '(:relative ".alienpress"))
-                   (site-srcdir site)))
+                   (site-sitedir site)))
 
 ;;; config.lisp ends here
 
