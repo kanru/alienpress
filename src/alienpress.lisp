@@ -55,14 +55,6 @@
     (info "  select template ~A" pathname)
     (mustache-compile pathname)))
 
-;; TODO
-(defun changed-files (oldlist newlist)
-  newlist)
-
-;; TODO
-(defun output-dir (site input-file)
-  (pathname-directory (destdir site)))
-
 (defun compile-page (site file-info)
   (info "compile page ~a" (path file-info))
   (let* ((tmpl (select-template site file-info))
