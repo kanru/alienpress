@@ -31,81 +31,51 @@
 (in-package #:alienpress)
 
 (defparameter *site-list* nil)
-(defparameter *recognized-options* nil)
 
 (defclass site ()
   ((name :initarg :name
-         :accessor name)
-   (title :initarg :title
-          :accessor title)
+         :accessor site-name)
    (srcdir :initarg :srcdir
            :initform nil
-           :accessor srcdir)
+           :accessor site-srcdir)
    (destdir :initarg :destdir
             :initform nil
-            :accessor destdir)
+            :accessor site-destdir)
+   (title :initarg :title
+          :accessor title)
    (baseurl :initarg :baseurl
-            :accessor baseurl)
-   (plugins :initarg :plugins
-            :accessor plugins)
-   (options :initarg :options
-            :initform nil
-            :accessor options)))
+            :accessor site-baseurl)))
 
-(defun defsite (name &rest options)
-  (assert (evenp (length options))
-          (options) "Odd number of options ~A" options)
-  (let ((site (make-site name options)))
-    (print *load-pathname*)
-    (print *compile-file-pathname*)
-    (ensure-site-directory site (dirname (or *load-pathname*
-                                             *compile-file-pathname*
-                                             *default-pathname-defaults*)))
-    (push site *site-list*)
-    site))
+(defmethod initialize-instance :after ((instance site) &rest initargs)
+  (declare (ignore initargs))
+  (ensure-absolute-site-directory instance)
+  (push instance *site-list*))
 
-(defun dirname (pathname)
-  (make-pathname :directory (pathname-directory pathname)))
+(defmethod print-object ((object site) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (princ (site-name object) stream)))
 
-(defun absolute-directory-p (pathname)
+(defun absolute-pathname-p (pathname)
   (eql :absolute (car (pathname-directory pathname))))
 
-(defun ensure-absolute-directory (pathname &optional default-pathname)
-  (if (null pathname)
-      default-pathname
-      (if (absolute-directory-p pathname)
-          pathname
-          (fad:pathname-as-directory
-           (merge-pathnames pathname default-pathname)))))
+(defun absolute-directory (pathname &optional (default-pathname *default-pathname-defaults*))
+  "Return the PATHNAME in absolute form."
+  (let ((pathname (pathname (or pathname default-pathname))))
+    (cond
+      ((absolute-pathname-p pathname) pathname)
+      (t (fad:pathname-as-directory
+          (merge-pathnames pathname default-pathname))))))
 
-(defun ensure-site-directory (site default-pathname)
-  (with-accessors ((base basedir)
-                   (srcd srcdir)
-                   (dest destdir)
-                   (tmpl templatedir)) site
-    (setf base (ensure-absolute-directory base default-pathname))
-    (setf srcd (ensure-absolute-directory srcd base))
-    (setf dest (ensure-absolute-directory dest base))
-    (setf tmpl (ensure-absolute-directory tmpl base))))
+(defun ensure-absolute-site-directory (site)
+  "Ensure the directories in SITE is absolute."
+  (with-accessors ((srcdir site-srcdir)
+                   (destdir site-destdir)) site
+    (setf srcdir  (absolute-directory srcdir))
+    (setf destdir (absolute-directory destdir))))
 
-(defun make-site (name options)
-  (let ((site (make-instance 'site :name name)))
-    (doplist (key val options)
-      (let ((slot (intern (string key) #.*package*)))
-        (if (slot-exists-p site slot)
-            (setf (slot-value site slot) val)
-            (progn
-              (when (not (member key *recognized-options*))
-                (warn "Unrecognized option ~a" key))
-              (setf (options site) (acons key val (options site)))))))
-    site))
-
-(defun option (site option)
-  (assoc-value (options site) option))
-
-(defun cache-dir (site)
-  (merge-pathnames #P".alienpress/"
-                   (srcdir site)))
+(defun site-cache-dir (site)
+  (merge-pathnames (make-pathname :directory '(:relative ".alienpress"))
+                   (site-srcdir site)))
 
 ;;; config.lisp ends here
 

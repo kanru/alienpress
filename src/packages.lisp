@@ -31,20 +31,7 @@
 (in-package #:cl-user)
 
 (defpackage #:alienpress
-  (:use #:cl)
-  (:import-from #:fad
-                #:directory-pathname-p
-                #:pathname-as-directory
-                #:walk-directory)
-  (:import-from #:marshal
-                #:marshal
-                #:unmarshal)
-  (:import-from #:alexandria
-                #:doplist
-                #:plist-alist
-                #:assoc-value)
-  (:import-from #:mustache
-                #:mustache-compile))
+  (:use #:cl))
 
 ;;; packages.lisp ends here
 
