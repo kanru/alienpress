@@ -30,53 +30,23 @@
 
 (in-package #:alienpress)
 
-(defmacro with-cache-file ((var filename site) &body body)
-  (let ((cache-dir (gensym)))
-    `(let* ((,cache-dir (or (cache-dir ,site)
-                            (merge-pathnames #P".alienpress/")))
-            (,var (merge-pathnames
-                   ,filename (make-pathname
-                              :directory (pathname-directory ,cache-dir)))))
-       (ensure-directories-exist ,var)
-       ,@body)))
+(defun absolute-pathname-p (pathname)
+  (eq :absolute (car (pathname-directory pathname))))
 
-(defun save-cache (object filename &optional site)
-  (with-cache-file (cache-file filename site)
-    (with-open-file (out cache-file :direction :output :if-exists :supersede)
-      (with-standard-io-syntax
-        (let ((*print-pretty* nil))
-          (prin1 (marshal object) out)))))
-  (values))
-
-(defun read-cache (filename &optional site)
-  (with-cache-file (cache-file filename site)
-    (with-open-file (in cache-file :if-does-not-exist nil)
-      (when in
-        (with-standard-io-syntax
-          (let ((*read-eval* nil))
-            (unmarshal (read in))))))))
-
-(defun pathname-relative (orig base)
-  (let ((orig-dir (pathname-directory orig))
-        (base-dir (pathname-directory (pathname-as-directory base))))
-    (assert (and (eql :absolute (car orig-dir))
-                 (eql :absolute (car base-dir))))
-    (let ((pos (mismatch orig-dir base-dir :test #'equal)))
-      (make-pathname :directory (cons :relative (subseq orig-dir pos))
-                     :defaults orig))))
-
-(defun pathname-absolute-p (pathname)
-  (eql :absolute (car (pathname-directory pathname))))
-
-(defun absolute-directory (pathname &optional (default-pathname *default-pathname-defaults*))
+(defun absolute-pathname (pathname &optional (defaults *default-pathname-defaults*))
   "Return the PATHNAME in absolute form."
-  (let ((pathname (pathname (or pathname default-pathname))))
+  (let ((pathname (or pathname defaults)))
     (cond
-      ((pathname-absolute-p pathname)
-       (fad:pathname-as-directory pathname))
-      (t
-       (fad:pathname-as-directory
-        (merge-pathnames pathname default-pathname))))))
+      ((absolute-pathname-p pathname) pathname)
+      (t (merge-pathnames pathname defaults)))))
+
+(defun relative-pathname (pathname &optional (defaults *default-pathname-defaults*))
+  "Get relative pathname of PATHNAME based on DEFAULTS directory."
+  (let ((orig-dir (pathname-directory (absolute-pathname pathname)))
+        (base-dir (pathname-directory (absolute-pathname defaults))))
+    (let ((pos (mismatch orig-dir base-dir :test #'equal)))
+      (make-pathname :directory (cons :relative (and pos (subseq orig-dir pos)))
+                     :defaults pathname))))
 
 ;;; utils.lisp ends here
 
