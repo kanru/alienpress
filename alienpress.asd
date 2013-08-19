@@ -1,16 +1,20 @@
+(in-package :cl-user)
+
 (asdf:defsystem :alienpress
   :description "Blog compiler that uses alien technologies"
   :version "0.0.1"
   :author "Kan-Ru Chen <kanru@kanru.info>"
   :licence "MIT/Expat"
-  :components ((:module "src"
-                :components ((:file "packages")
-                             (:file "config" :depends-on ("packages"))
-                             (:file "utils" :depends-on ("config"))
-                             (:file "db" :depends-on ("packages"))
-                             (:file "alienpress" :depends-on ("utils" "db")))))
-  :depends-on ("cl-mustache"
-               "cl-markdown"
+  :components ((:file "packages" :pathname "src/packages")
+               (:module "src"
+                :depends-on ("packages")
+                :components ((:file "alienpress"   :depends-on ("site"))
+                             (:file "article")
+                             (:file "directive")
+                             (:file "preprocessor" :depends-on ("article"))
+                             (:file "site"         :depends-on ("utils"))
+                             (:file "utils"))))
+  :depends-on ("alexandria"
                "cl-fad"
-               "alexandria"
-               "marshal"))
+               "cl-markdown"
+               "cl-mustache"))
