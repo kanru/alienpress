@@ -54,6 +54,12 @@
     (when type
       (change-class file (cdr type)))))
 
+(defgeneric file-collect-metadata (file)
+  (:documentation "Collect metadata of FILE."))
+
+(defmethod file-collect-metadata ((file file))
+  (values))
+
 ;;; file.lisp ends here
 
 ;;; Local Variables:

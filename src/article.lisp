@@ -46,6 +46,13 @@
 (push '("md" . article) *file-type-alist*)
 (push '("markdown" . article) *file-type-alist*)
 
+(defmethod file-collect-metadata ((file article))
+  (with-open-file (in (file-path file))
+    (let ((*current-article* file)
+          (ast (read-article in)))
+      (eval-article-ast ast)))
+  (values))
+
 ;;; article.lisp ends here
 
 ;;; Local Variables:
