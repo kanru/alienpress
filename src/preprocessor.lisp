@@ -79,20 +79,17 @@ syntax tree."
         (list (write-string (eval-directive node) out-stream))))))
 
 ;;; TODO Add hook
-(defun markdown-to-html (markdown)
+(defun markup-to-html (markdown)
   "Translate MARKDOWN string to html."
   (let ((ast (markdown:markdown markdown
                                 :stream nil :format :none)))
     (markdown:render-to-stream ast :html nil)))
 
-(defun file-to-article (file)
-  (with-open-file (in file)
-    (let ((*current-article* (make-article))
+(defun render-article (article &optional (stream *standard-output*))
+  (with-open-file (in (file-path article))
+    (let ((*current-article* article)
           (ast (read-article in)))
-      (setf (article-ast *current-article*) ast
-            (article-html *current-article*)
-            (markdown-to-html (eval-article-ast ast)))
-      *current-article*)))
+      (write-string (markup-to-html (eval-article-ast ast)) stream))))
 
 (defun apply-template (content template context)
   (let ((context (acons :content content context)))

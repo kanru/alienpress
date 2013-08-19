@@ -66,7 +66,7 @@
             (:title (setf (article-title article) value))
             (:published (setf (article-publish-time article) value))
             (:updated (setf (article-update-time article) value))
-            (:id (setf (article-id article) value))
+            (:id (setf (article-uuid article) value))
             (:tags (setf (article-tags article) (parse-tags value)))
             (otherwise)))))))
 (register-directive "meta" #'meta-directive)

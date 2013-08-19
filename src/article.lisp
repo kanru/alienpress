@@ -36,14 +36,15 @@
   (when (boundp '*current-article*)
     *current-article*))
 
-(defstruct article
-  (title         "" :type string)
-  (publish-time  "" :type string)
-  (update-time   "" :type string)
-  (id            "" :type string)
-  (tags          () :type list)
-  (ast           () :type list)
-  (html          "" :type string))
+(defclass article (file)
+  ((title        :accessor article-title)
+   (publish-time :accessor article-publish-time)
+   (update-time  :accessor article-update-time)
+   (uuid         :accessor article-uuid)
+   (tags         :accessor article-tags)))
+
+(defun file->article (file)
+  (change-class file 'article))
 
 ;;; article.lisp ends here
 
