@@ -1,6 +1,6 @@
 ;;;; alienpress.lisp --- Alienpress
 
-;;; Copyright (C) 2012  Kan-Ru Chen
+;;; Copyright (C) 2012, 2013  Kan-Ru Chen
 
 ;;; Author(s): Kan-Ru Chen <kanru@kanru.info>
 
@@ -40,36 +40,11 @@
     (format t "~%")))
 
 (defun compile-site (site)
-  (let* ((cache (read-cache "files" site))
-         (current (file-list-of site))
-         (changed (changed-files cache current)))
-    (loop :for file-info :in changed
-          :do
-             (compile-page site file-info))
-    (save-cache current "files" site)))
-
-(defun select-template (site file-info)
-  (let ((pathname (make-pathname :name "default"
-                                 :type mustache:*default-pathname-type*
-                                 :defaults (templatedir site))))
-    (info "  select template ~A" pathname)
-    (mustache-compile pathname)))
-
-(defun compile-page (site file-info)
-  (info "compile page ~a" (path file-info))
-  (let* ((tmpl (select-template site file-info))
-         (input-file (path file-info))
-         (output-file (make-pathname :name (pathname-name input-file)
-                                     :directory (output-dir site input-file)
-                                     :type "html"))
-         (article (read-article input-file))
-         (mdwn (markdown:markdown (process-article article)
-                                  :stream nil :format :none)))
-    (info "  output file ~a" output-file)
-    (with-open-file (output output-file :direction :output :if-exists :supersede)
-      (let ((mustache:*mustache-output* output))
-        (funcall tmpl `((:title . "Test")
-                        (:content . ,(markdown:render-to-stream mdwn :html nil))))))))
+  (let ((files (site-source-files site)))
+    ;; 1. Collect meta data
+    ;; 2. Convert all markups to HTML and copy data to the destination
+    ;;    directory.
+    ))
 
 ;;; alienpress.lisp ends here
 
