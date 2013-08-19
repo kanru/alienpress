@@ -40,10 +40,13 @@
     (format t "~%")))
 
 (defun compile-site (site)
-  (let ((files (site-source-files site)))
+  (let ((files (mapcar #'make-file (site-source-files site))))
+    (mapc #'file-upgrade-type files)
     ;; 1. Collect meta data
+    ;(mapc #'collect-metadata files)
     ;; 2. Convert all markups to HTML and copy data to the destination
     ;;    directory.
+    ;(mapc #'write-or-copy-file files)
     ))
 
 ;;; alienpress.lisp ends here

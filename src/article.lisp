@@ -43,8 +43,8 @@
    (uuid         :accessor article-uuid)
    (tags         :accessor article-tags)))
 
-(defun file->article (file)
-  (change-class file 'article))
+(push '("md" . article) *file-type-alist*)
+(push '("markdown" . article) *file-type-alist*)
 
 ;;; article.lisp ends here
 

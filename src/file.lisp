@@ -26,11 +26,33 @@
 
 (in-package :alienpress)
 
+(defvar *file-type-alist* nil
+  "A list of (type . class) for different file types.")
+
 (defclass file ()
   ((path :initarg :path
-         :accessor file-path)
-   (mtime :initarg :mtime
-          :accessor file-mtime)))
+         :reader file-path)
+   (mtime :reader file-mtime)))
+
+(defmethod initialize-instance :after ((instance file) &rest initargs)
+  (declare (ignore initargs))
+  (with-slots (mtime path)
+      instance
+    (setf mtime (file-write-date path))))
+
+(defmethod print-object ((object file) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (princ (file-path object) stream)))
+
+(defun make-file (path)
+  (make-instance 'file :path path))
+
+(defun file-upgrade-type (file)
+  "Upgrade FILE's type according to it's `pathname-type'."
+  (let ((type (assoc (pathname-type (file-path file))
+                     *file-type-alist* :test #'equalp)))
+    (when type
+      (change-class file (cdr type)))))
 
 ;;; file.lisp ends here
 
