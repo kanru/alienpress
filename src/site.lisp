@@ -79,15 +79,11 @@
   (let (list)
     (labels ((add-file-to-list (pathname)
                (when (pathname-name pathname)
-                 (push pathname list)))
-             (not-hidden (pathname)
-               (let ((name (or (pathname-name pathname)
-                               (car (last (pathname-directory pathname))))))
-                 (not (char= #\. (char name 0))))))
+                 (push pathname list))))
       (fad:walk-directory
        (site-source-dir site) #'add-file-to-list
        :directories :breadth-first
-       :test #'not-hidden))
+       :test (complement #'hidden-pathname-p)))
     list))
 
 ;;; config.lisp ends here

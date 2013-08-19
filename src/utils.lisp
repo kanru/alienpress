@@ -48,6 +48,13 @@
       (make-pathname :directory (cons :relative (and pos (subseq orig-dir pos)))
                      :defaults pathname))))
 
+(defun hidden-pathname-p (pathname)
+  "If a PATHNAME is hidden by the UNIX shell convention.
+That is, whether the last component starts with a #\."
+  (let ((name (or (pathname-name pathname)
+                  (car (last (pathname-directory pathname))))))
+    (char= #\. (char name 0))))
+
 ;;; utils.lisp ends here
 
 ;;; Local Variables:
