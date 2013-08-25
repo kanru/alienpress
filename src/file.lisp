@@ -66,13 +66,17 @@
 (defgeneric file-collect-metadata (file)
   (:documentation "Collect metadata of FILE."))
 
-(defmethod file-collect-metadata ((file file))
-  (values))
-
 (defgeneric copy-or-write-file (file site)
   (:documentation "Write files to their destination."))
 
+(defmethod file-collect-metadata ((file file))
+  (values))
+
 (defmethod copy-or-write-file ((file file) site)
+  (let ((destdir (file-destdir file site))
+        (from (file-path file)))
+    (ensure-directories-exist destdir)
+    (fad:copy-file from destdir :overwrite t))
   (values))
 
 ;;; file.lisp ends here

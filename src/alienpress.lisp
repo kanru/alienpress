@@ -44,7 +44,8 @@
     (mapc #'file-upgrade-type files)
     (mapc #'file-collect-metadata files)
     (mapc (lambda (file)
-            (copy-or-write-file file site)) files)))
+            (copy-or-write-file file site)) files))
+  (values))
 
 ;;; alienpress.lisp ends here
 
