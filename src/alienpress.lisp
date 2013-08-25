@@ -43,10 +43,8 @@
   (let ((files (mapcar #'make-file (site-source-files site))))
     (mapc #'file-upgrade-type files)
     (mapc #'file-collect-metadata files)
-    ;; 2. Convert all markups to HTML and copy data to the destination
-    ;;    directory.
-    ;(mapc #'write-or-copy-file files)
-    ))
+    (mapc (lambda (file)
+            (copy-or-write-file file site)) files)))
 
 ;;; alienpress.lisp ends here
 

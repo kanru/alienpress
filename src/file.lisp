@@ -54,10 +54,25 @@
     (when type
       (change-class file (cdr type)))))
 
+(defun file-name (file)
+  (pathname-name (file-path file)))
+
+(defun file-destdir (file site)
+  (let ((srcpath (file-path file))
+        (srcdir  (site-source-dir site))
+        (destdir (site-destdir site)))
+    (merge-pathnames (relative-pathname srcpath srcdir) destdir)))
+
 (defgeneric file-collect-metadata (file)
   (:documentation "Collect metadata of FILE."))
 
 (defmethod file-collect-metadata ((file file))
+  (values))
+
+(defgeneric copy-or-write-file (file site)
+  (:documentation "Write files to their destination."))
+
+(defmethod copy-or-write-file ((file file) site)
   (values))
 
 ;;; file.lisp ends here

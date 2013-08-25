@@ -44,6 +44,7 @@
    (tags         :accessor article-tags)))
 
 (push '("md" . article) *file-type-alist*)
+(push '("mdwn" . article) *file-type-alist*)
 (push '("markdown" . article) *file-type-alist*)
 
 (defmethod file-collect-metadata ((file article))
@@ -51,6 +52,16 @@
     (let ((*current-article* file)
           (ast (read-article in)))
       (eval-article-ast ast)))
+  (values))
+
+(defmethod copy-or-write-file ((file article) site)
+  (let* ((destdir (file-destdir file site))
+         (destfile (merge-pathnames (make-pathname :name (file-name file)
+                                                   :type "html")
+                                    destdir)))
+    (ensure-directories-exist destdir)
+    (with-open-file (out destfile :if-exists :supersede :direction :output)
+      (render-article file out)))
   (values))
 
 ;;; article.lisp ends here
