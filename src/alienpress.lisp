@@ -35,15 +35,17 @@
 
 (defun info (control-string &rest args)
   (when *verbose*
-    (format t "* ")
+    (format t "; ")
     (apply #'format t control-string args)
-    (format t "~%")))
+    (fresh-line)))
 
 (defun compile-site (site)
   (let ((files (mapcar #'make-file (site-source-files site))))
     (mapc #'file-upgrade-type files)
     (mapc #'file-collect-metadata files)
     (mapc (lambda (file)
+            (info "compiling file ~A" (file-path file))
+            (info "~A written" (file-destdir file site))
             (copy-or-write-file file site)) files))
   (values))
 

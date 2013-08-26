@@ -59,8 +59,10 @@
   "Ensure the directories in SITE is absolute."
   (with-accessors ((sitedir site-sitedir)
                    (destdir site-destdir)) site
-    (setf sitedir (absolute-pathname sitedir))
-    (setf destdir (absolute-pathname destdir))))
+    (ensure-directories-exist sitedir)
+    (ensure-directories-exist destdir)
+    (setf sitedir (truename sitedir))
+    (setf destdir (truename destdir))))
 
 (defun site-source-dir (site)
   (merge-pathnames (make-pathname :directory '(:relative "source"))
