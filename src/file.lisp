@@ -57,11 +57,23 @@
 (defun file-name (file)
   (pathname-name (file-path file)))
 
+(defun file-type (file)
+  (pathname-type (file-path file)))
+
 (defun file-destdir (file site)
   (let ((srcpath (file-path file))
         (srcdir  (site-source-dir site))
         (destdir (site-destdir site)))
     (merge-pathnames (relative-pathname srcpath srcdir) destdir)))
+
+(defgeneric file-dest-path (file site)
+  (:documentation "Return the destination file name."))
+
+(defmethod file-dest-path ((file file) site)
+  (let ((destdir (file-destdir file site)))
+    (merge-pathnames (make-pathname :name (file-name file)
+                                    :type (file-type file))
+                     destdir)))
 
 (defgeneric file-collect-metadata (file)
   (:documentation "Collect metadata of FILE."))

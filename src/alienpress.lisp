@@ -45,8 +45,18 @@
     (mapc #'file-collect-metadata files)
     (mapc (lambda (file)
             (info "compiling file ~A" (file-path file))
-            (info "~A written" (file-destdir file site))
+            (info "~A written" (file-dest-path file site))
             (copy-or-write-file file site)) files))
+  (values))
+
+(defun load-config-file (path)
+  (let ((*default-pathname-defaults*
+          (make-pathname :directory (pathname-directory path))))
+    ;; XXX security
+    (load path)))
+
+(defun compile-all-sites ()
+  (mapc #'compile-site *site-list*)
   (values))
 
 ;;; alienpress.lisp ends here

@@ -55,14 +55,15 @@
   (values))
 
 (defmethod copy-or-write-file ((file article) site)
-  (let* ((destdir (file-destdir file site))
-         (destfile (merge-pathnames (make-pathname :name (file-name file)
-                                                   :type "html")
-                                    destdir)))
-    (ensure-directories-exist destdir)
+  (let* ((destfile (file-dest-path file site)))
+    (ensure-directories-exist destfile)
     (with-open-file (out destfile :if-exists :supersede :direction :output)
       (render-article file out)))
   (values))
+
+(defmethod file-dest-path :around ((file article) site)
+  (merge-pathnames (make-pathname :type "html")
+                   (call-next-method file site)))
 
 ;;; article.lisp ends here
 
