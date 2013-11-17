@@ -41,7 +41,9 @@
    (publish-time :accessor article-publish-time)
    (update-time  :accessor article-update-time)
    (uuid         :accessor article-uuid)
-   (tags         :accessor article-tags)))
+   (tags         :accessor article-tags)
+   (template     :initform "default"
+                 :accessor article-template)))
 
 (push '("md" . article) *file-type-alist*)
 (push '("mdwn" . article) *file-type-alist*)
@@ -55,15 +57,29 @@
   (values))
 
 (defmethod copy-or-write-file ((file article) site)
-  (let* ((destfile (file-dest-path file site)))
+  (let* ((destfile (file-dest-path file site))
+         (template (article-template-path file site)))
     (ensure-directories-exist destfile)
     (with-open-file (out destfile :if-exists :supersede :direction :output)
-      (render-article file out)))
+      (render-article file template out)))
   (values))
 
 (defmethod file-dest-path :around ((file article) site)
   (merge-pathnames (make-pathname :type "html")
                    (call-next-method file site)))
+
+(defun article-template-path (article site)
+  (merge-pathnames (article-template article)
+                   (site-template-dir site)))
+
+(defun context-from-article (article)
+  (let ((it article))
+    `((:title        . ,(article-title it))
+      (:publish-time . ,(article-publish-time it))
+      (:update-time  . ,(article-update-time it))
+      (:uuid         . ,(article-uuid it))
+      (:tags         . ,(article-tags it))
+      (:content      . nil))))
 
 ;;; article.lisp ends here
 

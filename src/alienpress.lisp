@@ -46,7 +46,8 @@
     (mapc (lambda (file)
             (info "compiling file ~A" (file-path file))
             (info "~A written" (file-dest-path file site))
-            (copy-or-write-file file site)) files))
+            (copy-or-write-file file site)) files)
+    (info "finished."))
   (values))
 
 (defun load-config-file (path)

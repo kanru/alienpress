@@ -85,15 +85,17 @@ syntax tree."
                                 :stream nil :format :none)))
     (markdown:render-to-stream ast :html nil)))
 
-(defun render-article (article &optional (stream *standard-output*))
+(defun render-article (article template &optional (stream *standard-output*))
   (with-open-file (in (file-path article))
     (let ((*current-article* article)
           (ast (read-article in)))
-      (write-string (markup-to-html (eval-article-ast ast)) stream))))
+      (let* ((content (eval-article-ast ast))
+             (context (context-from-article article))
+             (context (acons :content (markup-to-html content) context)))
+        (write-string (apply-template template context) stream)))))
 
-(defun apply-template (content template context)
-  (let ((context (acons :content content context)))
-    (mustache:mustache-render-to-string template context)))
+(defun apply-template (template context)
+  (mustache:mustache-render-to-string template context))
 
 ;;; preprocessor.lisp ends here
 

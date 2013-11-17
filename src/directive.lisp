@@ -68,6 +68,7 @@
             (:updated (setf (article-update-time article) value))
             (:id (setf (article-uuid article) value))
             (:tags (setf (article-tags article) (parse-tags value)))
+            (:template (setf (article-template article) value))
             (otherwise)))))))
 (register-directive "meta" #'meta-directive)
 
