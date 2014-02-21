@@ -24,53 +24,70 @@
 
 ;;;; Commentary:
 
-;;; 
-
 ;;;; Code:
 
 (in-package :alienpress)
 
-(defvar *directive-table* (make-hash-table :test #'equalp))
+(defparameter *directive-meta-table* (make-hash-table :test #'equalp))
+(defparameter *directive-format-table* (make-hash-table :test #'equalp))
+(defparameter *directive-tables-alist*
+  `((:meta . ,*directive-meta-table*)
+    (:format . ,*directive-format-table*)))
 
-(defun register-directive (name function)
-  (setf (gethash (string name) *directive-table*)
-        function))
+(defun add-directive (name function category &rest other-categories)
+  "Register a directive to the directive table. Optional categories
+could be :meta or :format."
+  (let ((categories (cons category other-categories)))
+    (loop :for category :in categories
+          :for table = (cdr (assoc category *directive-tables-alist*))
+          :when table
+            :do (setf (gethash (string name) table) function))))
 
-(defun find-directive (name)
-  (gethash (string name) *directive-table*
-           (lambda (&rest args)
-             (declare (ignore args))
-             (format nil "#<Undefined directive ~A>" name))))
+(defun remove-directive (name function category &rest other-categories)
+  (declare (ignore name function category other-categories))
+  (error "Not implemented"))
 
-(defun eval-directive (directive-args)
-  (let ((directive (find-directive (first directive-args)))
+(defun find-directive (name category)
+  (let ((table (cdr (assoc category *directive-tables-alist*))))
+    (when table
+      (gethash (string name) table))))
+
+(defun eval-directive (directive-args category)
+  (let ((directive (find-directive (first directive-args) category))
         (args (rest directive-args)))
-    (format nil "~@[~A~]" (apply directive args))))
+    (if directive
+        (format nil "~@[~A~]" (apply directive args))
+        "")))
 
 ;;;; Predefined directives
 
-;;; FIXME Use alexandria:doplist
 (defun meta-directive (&rest keyword-args)
-  (labels ((position-skip (chars sequence &key start)
-             (position-if (lambda (char) (not (member char chars)))
-                          sequence :start start))
-           (parse-tags (input)
-             (loop :for start := 0 :then (position-skip '(#\, #\Space) input :start (1+ finish))
-                   :for finish := (position #\, input :start start)
-                   :collect (subseq input start finish)
-                   :until (null finish))))
+  (labels ((parse-tags (input)
+             (mapcar (lambda (token)
+                       (string-trim " " token))
+                     (split-sequence #\, input))))
     (let ((article (current-article)))
       (when article
-        (loop :for (key value) :on keyword-args :by #'cddr :do
-          (case key
-            (:title (setf (article-title article) value))
-            (:published (setf (article-publish-time article) value))
-            (:updated (setf (article-update-time article) value))
-            (:id (setf (article-uuid article) value))
-            (:tags (setf (article-tags article) (parse-tags value)))
-            (:template (setf (article-template article) value))
-            (otherwise)))))))
-(register-directive "meta" #'meta-directive)
+        (doplist (key value keyword-args)
+                 (case key
+                   (:title (setf (article-title article) value))
+                   (:published (setf (article-publish-time article) value))
+                   (:updated (setf (article-update-time article) value))
+                   (:id (setf (article-uuid article) value))
+                   (:tags (setf (article-tags article) (parse-tags value)))
+                   (:template (setf (article-template article) value))
+                   (otherwise)))))))
+(add-directive "meta" #'meta-directive :meta)
+
+(defun index-directive (&key from to tags limit &allow-other-keys)
+  ;; (format nil "Generating index :from ~A :to ~A :tags ~A :limit ~A"
+  ;;         from to tags limit)
+  (declare (ignore from to tags limit))
+  (with-output-to-string (out)
+    (loop :for article :in (current-articles)
+          :when (slot-boundp article 'title)
+          :do (format out "<h1>~A</h1>" (article-title article)))))
+(add-directive "index" #'index-directive :format)
 
 ;;; directive.lisp ends here
 

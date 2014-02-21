@@ -70,13 +70,13 @@ syntax tree."
       (with-temp-package
         (process-char nil)))))
 
-(defun eval-article-ast (ast)
+(defun eval-article-ast (ast phase)
   "Processes the article's AST and outputs the final? article string."
   (with-output-to-string (out-stream)
     (loop :for node :in ast :do
       (etypecase node
         (string (write-string node out-stream))
-        (list (write-string (eval-directive node) out-stream))))))
+        (list (write-string (eval-directive node phase) out-stream))))))
 
 ;;; TODO Add hook
 (defun markup-to-html (markdown)
@@ -89,7 +89,7 @@ syntax tree."
   (with-open-file (in (file-path article))
     (let ((*current-article* article)
           (ast (read-article in)))
-      (let* ((content (eval-article-ast ast))
+      (let* ((content (eval-article-ast ast :format))
              (context (context-from-article article))
              (context (acons :content (markup-to-html content) context)))
         (write-string (apply-template template context) stream)))))

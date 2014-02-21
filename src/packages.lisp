@@ -31,7 +31,7 @@
 (in-package #:cl-user)
 
 (defpackage #:alienpress
-  (:use #:cl))
+  (:use #:cl #:split-sequence #:alexandria))
 
 ;;; packages.lisp ends here
 

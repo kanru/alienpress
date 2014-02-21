@@ -30,11 +30,19 @@
 
 (in-package :alienpress)
 
+(defvar *current-file-list* nil
+  "File list of current site")
+
 (defvar *current-article*)
 
 (defun current-article ()
   (when (boundp '*current-article*)
     *current-article*))
+
+(defun current-articles ()
+  (loop :for article :in *current-file-list*
+        :when (typep article 'article)
+          :collect article))
 
 (defclass article (file)
   ((title        :accessor article-title)
@@ -53,10 +61,10 @@
   (with-open-file (in (file-path file))
     (let ((*current-article* file)
           (ast (read-article in)))
-      (eval-article-ast ast)))
+      (eval-article-ast ast :meta)))
   (values))
 
-(defmethod copy-or-write-file ((file article) site)
+(defmethod file-render ((file article) site)
   (let* ((destfile (file-dest-path file site))
          (template (article-template-path file site)))
     (ensure-directories-exist destfile)

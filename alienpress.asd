@@ -18,4 +18,5 @@
   :depends-on ("alexandria"
                "cl-fad"
                "cl-markdown"
-               "cl-mustache"))
+               "cl-mustache"
+               "split-sequence"))

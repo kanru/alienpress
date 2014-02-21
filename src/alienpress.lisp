@@ -40,13 +40,13 @@
     (fresh-line)))
 
 (defun compile-site (site)
-  (let ((files (mapcar #'make-file (site-source-files site))))
-    (mapc #'file-upgrade-type files)
-    (mapc #'file-collect-metadata files)
+  (let ((*current-file-list* (mapcar #'make-file (site-source-files site))))
+    (mapc #'file-upgrade-type *current-file-list*)
+    (mapc #'file-collect-metadata *current-file-list*)
     (mapc (lambda (file)
             (info "compiling file ~A" (file-path file))
             (info "~A written" (file-dest-path file site))
-            (copy-or-write-file file site)) files)
+            (file-render file site)) *current-file-list*)
     (info "finished."))
   (values))
 

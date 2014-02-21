@@ -78,13 +78,13 @@
 (defgeneric file-collect-metadata (file)
   (:documentation "Collect metadata of FILE."))
 
-(defgeneric copy-or-write-file (file site)
+(defgeneric file-render (file site)
   (:documentation "Write files to their destination."))
 
 (defmethod file-collect-metadata ((file file))
   (values))
 
-(defmethod copy-or-write-file ((file file) site)
+(defmethod file-render ((file file) site)
   (let ((destdir (file-destdir file site))
         (from (file-path file)))
     (ensure-directories-exist destdir)
