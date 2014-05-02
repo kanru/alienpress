@@ -52,7 +52,7 @@
   (push instance *site-list*))
 
 (defmethod print-object ((object site) stream)
-  (print-unreadable-object (object stream :type t :identity t)
+  (print-unreadable-object (object stream :type t)
     (princ (site-name object) stream)))
 
 (defun ensure-absolute-site-directory (site)
@@ -80,12 +80,15 @@
   "Return a list of files."
   (let (list)
     (labels ((add-file-to-list (pathname)
-               (when (pathname-name pathname)
+               (when (uiop:file-pathname-p pathname)
                  (push pathname list))))
-      (fad:walk-directory
-       (site-source-dir site) #'add-file-to-list
-       :directories :breadth-first
-       :test (complement #'hidden-pathname-p)))
+      (uiop:collect-sub*directories
+       (site-source-dir site)
+       (constantly t)
+       (lambda (dir)
+         (not (uiop:hidden-pathname-p dir)))
+       (lambda (dir)
+         (mapc #'add-file-to-list (uiop:directory-files dir)))))
     list))
 
 ;;; config.lisp ends here

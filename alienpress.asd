@@ -16,7 +16,7 @@
                              (:file "site"         :depends-on ("utils"))
                              (:file "utils"))))
   :depends-on ("alexandria"
-               "cl-fad"
+               "uiop"
                "cl-markdown"
                "cl-mustache"
                "split-sequence"))

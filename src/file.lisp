@@ -88,7 +88,10 @@
   (let ((destdir (file-destdir file site))
         (from (file-path file)))
     (ensure-directories-exist destdir)
-    (fad:copy-file from destdir :overwrite t))
+    (uiop:copy-file from
+                    (make-pathname :name (pathname-name from)
+                                   :type (pathname-type from)
+                                   :directory (pathname-directory destdir))))
   (values))
 
 ;;; file.lisp ends here

@@ -30,15 +30,9 @@
 
 (in-package #:alienpress)
 
-(defun absolute-pathname-p (pathname)
-  (eq :absolute (car (pathname-directory pathname))))
-
 (defun absolute-pathname (pathname &optional (defaults *default-pathname-defaults*))
   "Return the PATHNAME in absolute form."
-  (let ((pathname (or pathname defaults)))
-    (cond
-      ((absolute-pathname-p pathname) pathname)
-      (t (merge-pathnames pathname defaults)))))
+  (uiop:ensure-absolute-pathname pathname defaults))
 
 (defun relative-pathname (pathname &optional (defaults *default-pathname-defaults*))
   "Get relative pathname of PATHNAME based on DEFAULTS directory."
@@ -47,13 +41,6 @@
     (let ((pos (mismatch orig-dir base-dir :test #'equal)))
       (make-pathname :directory (cons :relative (and pos (subseq orig-dir pos)))
                      :defaults pathname))))
-
-(defun hidden-pathname-p (pathname)
-  "If a PATHNAME is hidden by the UNIX shell convention.
-That is, whether the last component starts with a #\."
-  (let ((name (or (pathname-name pathname)
-                  (car (last (pathname-directory pathname))))))
-    (char= #\. (char name 0))))
 
 ;;; utils.lisp ends here
 

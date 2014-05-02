@@ -51,8 +51,7 @@
   (values))
 
 (defun load-config-file (path)
-  (let ((*default-pathname-defaults*
-          (make-pathname :directory (pathname-directory path))))
+  (uiop:with-current-directory (path)
     ;; XXX security
     (load path)))
 
