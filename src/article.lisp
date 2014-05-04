@@ -39,17 +39,18 @@
   (when (boundp '*current-article*)
     *current-article*))
 
-(defun current-articles ()
+(defun current-articles (&key (exclude (current-article)))
   (loop :for article :in *current-file-list*
-        :when (typep article 'article)
+        :when (and (not (eq article exclude))
+                   (typep article 'article))
           :collect article))
 
 (defclass article (file)
-  ((title        :accessor article-title)
-   (publish-time :accessor article-publish-time)
-   (update-time  :accessor article-update-time)
-   (uuid         :accessor article-uuid)
-   (tags         :accessor article-tags)
+  ((title        :initform "" :accessor article-title)
+   (publish-time :initform "" :accessor article-publish-time)
+   (update-time  :initform () :accessor article-update-time)
+   (uuid         :initform "" :accessor article-uuid)
+   (tags         :initform () :accessor article-tags)
    (template     :initform "default"
                  :accessor article-template)))
 
@@ -84,7 +85,8 @@
   (let ((it article))
     `((:title        . ,(article-title it))
       (:publish-time . ,(article-publish-time it))
-      (:update-time  . ,(article-update-time it))
+      (:update-time  . ,(or (article-update-time it)
+                            (article-publish-time it)))
       (:uuid         . ,(article-uuid it))
       (:tags         . ,(article-tags it))
       (:content      . nil))))
