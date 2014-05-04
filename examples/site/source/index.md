@@ -8,4 +8,4 @@
 
 Test
 
-((index :limit 10))
+((blog-inline :limit 10))
