@@ -159,9 +159,28 @@
       (article-render file site out)))
   (values))
 
+(defmethod file-destdir ((file article) site)
+  (let ((srcpath (file-path file))
+        (srcdir  (site-source-dir site))
+        (destdir (site-destdir site)))
+    (if (string= "index" (file-name file))
+        (merge-pathnames (relative-pathname srcpath srcdir) destdir)
+        (merge-pathnames
+         (make-pathname :directory
+                        (append (pathname-directory
+                                 (relative-pathname srcpath srcdir))
+                                (list (file-name file))))
+         destdir))))
+
 (defmethod file-dest-path :around ((file article) site)
   (merge-pathnames (make-pathname :type "html")
                    (call-next-method file site)))
+
+(defmethod file-dest-path ((file article) site)
+  (let ((destdir (file-destdir file site)))
+    (merge-pathnames (make-pathname :name "index"
+                                    :type "html")
+                     destdir)))
 
 (defun article-template-path (article site)
   (merge-pathnames (article-template article)

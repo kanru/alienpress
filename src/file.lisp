@@ -60,7 +60,10 @@
 (defun file-type (file)
   (pathname-type (file-path file)))
 
-(defun file-destdir (file site)
+(defgeneric file-destdir (file site)
+  (:documentation "Return the destination directory of file."))
+
+(defmethod file-destdir ((file file) site)
   (let ((srcpath (file-path file))
         (srcdir  (site-source-dir site))
         (destdir (site-destdir site)))
