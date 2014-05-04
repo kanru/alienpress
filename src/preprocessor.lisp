@@ -95,7 +95,7 @@ syntax tree."
         (write-string (apply-template template context) stream)))))
 
 (defun apply-template (template context)
-  (mustache:mustache-render-to-string template context))
+  (mustache:render* template context))
 
 ;;; preprocessor.lisp ends here
 
