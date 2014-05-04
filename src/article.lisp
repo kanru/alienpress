@@ -60,6 +60,7 @@
 (push '("md" . article) *file-type-alist*)
 (push '("mdwn" . article) *file-type-alist*)
 (push '("markdown" . article) *file-type-alist*)
+(push '("rss" . article) *file-type-alist*)
 
 (defun rfc2822-skip-to-body (&optional (stream *standard-input*))
   (loop :for field = (read-line stream nil)
@@ -142,12 +143,14 @@
          (context (context-from-site (current-site)))
          (context (append (context-from-article article) context))
          (context (acons :content (markup-to-html content) context)))
-    (when (string= "blog" (article-type article))
+    (when (or (string= "blog" (article-type article))
+              (string= "rss"  (article-type article)))
       (with-output-to-string (datum)
         (loop :for ar :in (current-articles :exclude article)
               :for index :upto (article-blog-limit article)
-              :do (article-render ar (current-site) datum "blog-inline"))
-        (setf context (acons :blog-content
+              :do (article-render ar (current-site) datum
+                                  (format nil "~a-inline" (article-type article))))
+        (setf context (acons :inline-content
                              (get-output-stream-string datum) context))))
     (write-string (apply-template template context) stream))
   (values))
@@ -172,15 +175,15 @@
                                 (list (file-name file))))
          destdir))))
 
-(defmethod file-dest-path :around ((file article) site)
-  (merge-pathnames (make-pathname :type "html")
-                   (call-next-method file site)))
-
 (defmethod file-dest-path ((file article) site)
   (let ((destdir (file-destdir file site)))
-    (merge-pathnames (make-pathname :name "index"
-                                    :type "html")
-                     destdir)))
+    (if (string= "rss" (article-type file))
+        (merge-pathnames (make-pathname :name "index"
+                                        :type "rss")
+                         destdir)
+        (merge-pathnames (make-pathname :name "index"
+                                        :type "html")
+                         destdir))))
 
 (defun article-template-path (article site)
   (merge-pathnames (article-template article)
