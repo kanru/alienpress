@@ -90,7 +90,8 @@ syntax tree."
     (let ((*current-article* article)
           (ast (read-article in)))
       (let* ((content (eval-article-ast ast :format))
-             (context (context-from-article article))
+             (context (context-from-site (current-site)))
+             (context (append (context-from-article article) context))
              (context (acons :content (markup-to-html content) context)))
         (write-string (apply-template template context) stream)))))
 
