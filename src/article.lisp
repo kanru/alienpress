@@ -53,8 +53,9 @@
    (tags         :initform () :accessor article-tags)
    (template     :initform "default"
                  :accessor article-template)
-   (type         :initform "blog"
-                 :accessor article-type)))
+   (type         :initform "article"
+                 :accessor article-type)
+   (blog-limit   :initform 10 :accessor article-blog-limit)))
 
 (push '("md" . article) *file-type-alist*)
 (push '("mdwn" . article) *file-type-alist*)
@@ -82,7 +83,7 @@
           :do (let* ((colon (position #\: field))
                      (name (subseq field 0 colon))
                      (body (string-trim '(#\Space) (subseq field (1+ colon)))))
-                (push (cons name body) collector)))
+                (push (cons (string-downcase name) body) collector)))
     collector))
 
 (defun parse-tags (input)
@@ -90,6 +91,7 @@
             (string-trim " " token))
           (split-sequence #\, input)))
 
+;;; FIXME: Better metadata handling
 (defmethod file-collect-metadata ((file article))
   (with-open-file (in (file-path file))
     (let ((headers (rfc2822-read-headers in)))
@@ -111,7 +113,10 @@
             ((string= name "template")
              (setf (article-template file) body))
             ((string= name "type")
-             (setf (article-type file) body)))))))
+             (setf (article-type file) body))
+            ((string= name "blog-limit")
+             (setf (article-blog-limit file)
+                   (parse-integer body))))))))
   (values))
 
 (defun markup-to-html (markdown)
@@ -122,18 +127,35 @@
 (defun apply-template (template context)
   (mustache:render* template context))
 
-(defmethod file-render ((file article) site)
-  (let* ((destfile (file-dest-path file site))
-         (template (article-template-path file site))
-         (*current-article* file)
-         (content (with-open-file (in (file-path file))
+(defun template-path (template site)
+  (merge-pathnames template
+                   (site-template-dir site)))
+
+(defun article-render (article site &optional (stream *standard-output*) template)
+  (let* ((template (or (and template
+                            (template-path template site))
+                       (article-template-path article site)))
+         (*current-article* article)
+         (content (with-open-file (in (file-path article))
                     (rfc2822-read-body in)))
          (context (context-from-site (current-site)))
-         (context (append (context-from-article file) context))
+         (context (append (context-from-article article) context))
          (context (acons :content (markup-to-html content) context)))
+    (when (string= "blog" (article-type article))
+      (with-output-to-string (datum)
+        (loop :for ar :in (current-articles :exclude article)
+              :for index :upto (article-blog-limit article)
+              :do (article-render ar (current-site) datum "blog-inline"))
+        (setf context (acons :blog-content
+                             (get-output-stream-string datum) context))))
+    (write-string (apply-template template context) stream))
+  (values))
+
+(defmethod file-render ((file article) site)
+  (let ((destfile (file-dest-path file site)))
     (ensure-directories-exist destfile)
     (with-open-file (out destfile :if-exists :supersede :direction :output)
-      (write-string (apply-template template context) out)))
+      (article-render file site out)))
   (values))
 
 (defmethod file-dest-path :around ((file article) site)
