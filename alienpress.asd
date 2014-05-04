@@ -17,4 +17,5 @@
                "uiop"
                "cl-markdown"
                "cl-mustache"
-               "split-sequence"))
+               "split-sequence"
+               "cl-date-time-parser"))

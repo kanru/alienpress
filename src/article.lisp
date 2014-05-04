@@ -39,11 +39,21 @@
   (when (boundp '*current-article*)
     *current-article*))
 
-(defun current-articles (&key (exclude (current-article)))
-  (loop :for article :in *current-file-list*
-        :when (and (not (eq article exclude))
-                   (typep article 'article))
-          :collect article))
+(defun time-string> (a b)
+  (let ((uni1 (cl-date-time-parser:parse-date-time a))
+        (uni2 (cl-date-time-parser:parse-date-time b)))
+    (> uni1 uni2)))
+
+(defun articlep (file)
+  (and (typep file 'article)
+       (not (or (string= "rss" (article-type file))
+                (string= "blog" (article-type file))))))
+
+(defun sort-articles (articles)
+  (stable-sort articles #'time-string> :key #'article-publish-time))
+
+(defun current-articles ()
+  (sort-articles (remove-if-not #'articlep *current-file-list*)))
 
 (defclass article (file)
   ((title        :initform "" :accessor article-title)
@@ -146,7 +156,7 @@
     (when (or (string= "blog" (article-type article))
               (string= "rss"  (article-type article)))
       (with-output-to-string (datum)
-        (loop :for ar :in (current-articles :exclude article)
+        (loop :for ar :in (current-articles)
               :for index :upto (article-blog-limit article)
               :do (article-render ar (current-site) datum
                                   (format nil "~a-inline" (article-type article))))
