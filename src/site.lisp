@@ -31,6 +31,11 @@
 (in-package #:alienpress)
 
 (defparameter *site-list* nil)
+(defvar *current-site*)
+
+(defun current-site ()
+  (when (boundp '*current-site*)
+    *current-site*))
 
 (defclass site ()
   ((name :initarg :name
@@ -90,6 +95,12 @@
        (lambda (dir)
          (mapc #'add-file-to-list (uiop:directory-files dir)))))
     list))
+
+(defun context-from-site (site)
+  (let ((it site))
+    `((:site-name  . ,(site-name it))
+      (:site-title . ,(title it))
+      (:topdir     . ,(site-baseurl it)))))
 
 ;;; config.lisp ends here
 
