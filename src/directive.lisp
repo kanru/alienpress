@@ -56,7 +56,8 @@ could be :meta or :format."
   (let ((directive (find-directive (first directive-args) category))
         (args (rest directive-args)))
     (if directive
-        (format nil "~@[~A~]" (apply directive args))
+        (format nil "~@[~A~]" (with-output-to-string (*standard-output*)
+                                (apply directive args)))
         "")))
 
 ;;;; Predefined directives
@@ -79,15 +80,18 @@ could be :meta or :format."
                    (otherwise)))))))
 (add-directive "meta" #'meta-directive :meta)
 
-(defun index-directive (&key from to tags limit &allow-other-keys)
-  ;; (format nil "Generating index :from ~A :to ~A :tags ~A :limit ~A"
-  ;;         from to tags limit)
-  (declare (ignore from to tags limit))
-  (with-output-to-string (out)
-    (loop :for article :in (current-articles)
-          :when (slot-boundp article 'title)
-          :do (format out "<h1>~A</h1>" (article-title article)))))
-(add-directive "index" #'index-directive :format)
+(defun template-path (template site)
+  (merge-pathnames template
+                   (site-template-dir site)))
+
+(defun blog-inline-directive (&key from to tags limit (template "blog-inline")
+                              &allow-other-keys)
+  (declare (ignore from to tags))
+  (loop :for article :in (current-articles :exclude (current-article))
+        :for index :upto limit
+        :when (slot-boundp article 'title)
+          :do (render-article article (template-path template (current-site)))))
+(add-directive "blog-inline" #'blog-inline-directive :format)
 
 ;;; directive.lisp ends here
 
