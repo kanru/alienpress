@@ -65,7 +65,8 @@
                  :accessor article-template)
    (type         :initform "article"
                  :accessor article-type)
-   (blog-limit   :initform 10 :accessor article-blog-limit)))
+   (blog-limit   :initform 10 :accessor article-blog-limit)
+   (blog-after   :initform 3597523200 :accessor article-blog-after)))
 
 (push '("md" . article) *file-type-alist*)
 (push '("mdwn" . article) *file-type-alist*)
@@ -128,7 +129,10 @@
              (setf (article-type file) body))
             ((string= name "blog-limit")
              (setf (article-blog-limit file)
-                   (parse-integer body))))))))
+                   (parse-integer body)))
+            ((string= name "blog-after")
+             (setf (article-blog-limit file)
+                   (cl-date-time-parser:parse-date-time body))))))))
   (values))
 
 (defun article-self-link (article site)
@@ -172,8 +176,12 @@
       (with-output-to-string (datum)
         (loop :for ar :in (current-articles)
               :for index :upto (article-blog-limit article)
-              :do (article-render ar (current-site) datum
-                                  (format nil "~a-inline" (article-type article))))
+              :when (> (cl-date-time-parser:parse-date-time
+                        (article-publish-time ar))
+                       (article-blog-after article))
+                :do (article-render
+                     ar (current-site) datum
+                     (format nil "~a-inline" (article-type article))))
         (setf context (acons :inline-content
                              (get-output-stream-string datum) context))))
     (write-string (apply-template template context) stream))
