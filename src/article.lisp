@@ -131,6 +131,19 @@
                    (parse-integer body))))))))
   (values))
 
+(defun article-self-link (article site)
+  (let ((srcpath (file-path article))
+        (srcdir  (site-source-dir site))
+        (baseurl (site-baseurl site)))
+    (if (string= "index" (file-name article))
+        (concatenate 'string
+                     baseurl (directory-namestring
+                              (relative-pathname srcpath srcdir)))
+        (concatenate 'string
+                     baseurl (directory-namestring
+                              (relative-pathname srcpath srcdir))
+                     (file-name article)))))
+
 (defun markup-to-html (markdown)
   "Translate MARKDOWN string to html."
   (with-output-to-string (datum)
@@ -152,6 +165,7 @@
                     (rfc2822-read-body in)))
          (context (context-from-site (current-site)))
          (context (append (context-from-article article) context))
+         (context (acons :self-link (article-self-link article site) context))
          (context (acons :content (markup-to-html content) context)))
     (when (or (string= "blog" (article-type article))
               (string= "rss"  (article-type article)))
