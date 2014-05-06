@@ -39,25 +39,20 @@
   (when (boundp '*current-article*)
     *current-article*))
 
-(defun time-string> (a b)
-  (let ((uni1 (cl-date-time-parser:parse-date-time a))
-        (uni2 (cl-date-time-parser:parse-date-time b)))
-    (> uni1 uni2)))
-
 (defun articlep (file)
   (and (typep file 'article)
        (not (or (string= "rss" (article-type file))
                 (string= "blog" (article-type file))))))
 
 (defun sort-articles (articles)
-  (stable-sort articles #'time-string> :key #'article-publish-time))
+  (stable-sort articles #'> :key #'article-publish-time))
 
 (defun current-articles ()
   (sort-articles (remove-if-not #'articlep *current-file-list*)))
 
 (defclass article (file)
   ((title        :initform "" :accessor article-title)
-   (publish-time :initform "" :accessor article-publish-time)
+   (publish-time :initform () :accessor article-publish-time)
    (update-time  :initform () :accessor article-update-time)
    (uuid         :initform "" :accessor article-uuid)
    (tags         :initform () :accessor article-tags)
@@ -114,9 +109,11 @@
              (setf (article-title file) body))
             ((or (string= name "date")
                  (string= name "published"))
-             (setf (article-publish-time file) body))
+             (setf (article-publish-time file)
+                   (cl-date-time-parser:parse-date-time body)))
             ((string= name "updated")
-             (setf (article-update-time file) body))
+             (setf (article-update-time file)
+                   (cl-date-time-parser:parse-date-time body)))
             ((or (string= name "uuid")
                  (string= name "id")
                  (string= name "guid"))
@@ -131,7 +128,7 @@
              (setf (article-blog-limit file)
                    (parse-integer body)))
             ((string= name "blog-after")
-             (setf (article-blog-limit file)
+             (setf (article-blog-after file)
                    (cl-date-time-parser:parse-date-time body))))))))
   (values))
 
@@ -176,8 +173,7 @@
       (with-output-to-string (datum)
         (loop :for ar :in (current-articles)
               :for index :upto (article-blog-limit article)
-              :when (> (cl-date-time-parser:parse-date-time
-                        (article-publish-time ar))
+              :when (> (article-publish-time ar)
                        (article-blog-after article))
                 :do (article-render
                      ar (current-site) datum
@@ -224,9 +220,13 @@
 (defun context-from-article (article)
   (let ((it article))
     `((:title        . ,(article-title it))
-      (:publish-time . ,(article-publish-time it))
-      (:update-time  . ,(or (article-update-time it)
-                            (article-publish-time it)))
+      (:publish-time . ,(local-time:to-rfc1123-timestring
+                         (local-time:universal-to-timestamp
+                          (article-publish-time it))))
+      (:update-time  . ,(local-time:to-rfc3339-timestring
+                         (local-time:universal-to-timestamp
+                          (or (article-update-time it)
+                              (article-publish-time it)))))
       (:uuid         . ,(article-uuid it))
       (:tags         . ,(article-tags it))
       (:content      . nil))))
