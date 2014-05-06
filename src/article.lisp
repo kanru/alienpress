@@ -133,17 +133,19 @@
   (values))
 
 (defun article-self-link (article site)
-  (let ((srcpath (file-path article))
-        (srcdir  (site-source-dir site))
+  (let ((destpath (file-dest-path article site))
+        (destdir  (site-destdir site))
         (baseurl (site-baseurl site)))
-    (if (string= "index" (file-name article))
-        (concatenate 'string
-                     baseurl (directory-namestring
-                              (relative-pathname srcpath srcdir)))
-        (concatenate 'string
-                     baseurl (directory-namestring
-                              (relative-pathname srcpath srcdir))
-                     (file-name article)))))
+    (cond
+      ((and (string= "index" (file-name article))
+            (string= "rss" (article-type article)))
+       (concatenate 'string
+                    baseurl (namestring
+                             (relative-pathname destpath destdir))))
+      (t
+       (concatenate 'string
+                    baseurl (directory-namestring
+                             (relative-pathname destpath destdir)))))))
 
 (defun markup-to-html (markdown)
   "Translate MARKDOWN string to html."
