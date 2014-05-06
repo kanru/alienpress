@@ -100,7 +100,7 @@
   (let ((it site))
     `((:site-name  . ,(site-name it))
       (:site-title . ,(title it))
-      (:topdir     . ,(site-baseurl it)))))
+      (:baseurl    . ,(site-baseurl it)))))
 
 ;;; config.lisp ends here
 
