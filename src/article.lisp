@@ -60,8 +60,9 @@
                  :accessor article-template)
    (type         :initform "article"
                  :accessor article-type)
-   (blog-limit   :initform 10 :accessor article-blog-limit)
-   (blog-after   :initform 3597523200 :accessor article-blog-after)))
+   (blog-limit   :initform most-positive-fixnum :accessor article-blog-limit)
+   (blog-after   :initform most-negative-fixnum :accessor article-blog-after)
+   (blog-before  :initform most-positive-fixnum :accessor article-blog-before)))
 
 (push '("md" . article) *file-type-alist*)
 (push '("mdwn" . article) *file-type-alist*)
@@ -129,6 +130,9 @@
                    (parse-integer body)))
             ((string= name "blog-after")
              (setf (article-blog-after file)
+                   (cl-date-time-parser:parse-date-time body)))
+            ((string= name "blog-before")
+             (setf (article-blog-before file)
                    (cl-date-time-parser:parse-date-time body))))))))
   (values))
 
@@ -175,8 +179,10 @@
       (with-output-to-string (datum)
         (loop :for ar :in (current-articles)
               :for index :upto (article-blog-limit article)
-              :when (> (article-publish-time ar)
-                       (article-blog-after article))
+              :when (and (>= (article-publish-time ar)
+                             (article-blog-after article))
+                         (< (article-publish-time ar)
+                            (article-blog-before article)))
                 :do (article-render
                      ar (current-site) datum
                      (format nil "~a-inline" (article-type article))))
