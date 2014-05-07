@@ -1,0 +1,9 @@
+* Resource file in template directory
+* Better header handling
+* context protocol
+* split templates to header, footor, etc.
+* cache mustache renderer
+* documentation
+* command line interface
+* default lambda context for dates
+* extension method
