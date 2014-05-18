@@ -51,14 +51,13 @@
     (mapc #'file-upgrade-type *current-file-list*)
     (mapc #'file-collect-metadata *current-file-list*)
     (mapc (lambda (file)
-            (cond
-              ((or (file-modified-p file site) force)
-               (log-i "compiling file ~A" (file-path file))
-               (file-render file site)
-               (log-i "~A written" (file-dest-path file site)))
-              (t
-               (log-d "skip ~A" (file-path file)))))
-          *current-file-list*)
+            (log-i "compiling file ~A" (file-path file))
+            (file-render file site)
+            (log-i "~A written" (file-dest-path file site)))
+          (mapcan #'(lambda (file)
+                      (when (or (file-modified-p file site) force)
+                        (list file)))
+                  *current-file-list*))
     (log-i "finished."))
   (values))
 
