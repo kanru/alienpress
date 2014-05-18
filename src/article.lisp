@@ -170,9 +170,7 @@
          (*current-article* article)
          (content (with-open-file (in (file-path article))
                     (rfc2822-read-body in)))
-         (context (context-from-site (current-site)))
-         (context (append (context-from-article article) context))
-         (context (acons :self-link (article-self-link article site) context))
+         (context (mapcan #'collect-context (list (current-site) article)))
          (context (acons :content (markup-to-html content) context)))
     (when (or (string= "blog" (article-type article))
               (string= "rss"  (article-type article)))
@@ -225,8 +223,11 @@
   (merge-pathnames (article-template article)
                    (site-template-dir site)))
 
-(defun context-from-article (article)
-  (let ((it article))
+(defgeneric collect-context (object)
+  (:documentation "Return an alist of contexts from OBJECT."))
+
+(defmethod collect-context ((object article))
+  (let ((it object))
     `((:title        . ,(article-title it))
       (:publish-time . ,(local-time:to-rfc1123-timestring
                          (local-time:universal-to-timestamp
@@ -237,7 +238,14 @@
                               (article-publish-time it)))))
       (:uuid         . ,(article-uuid it))
       (:tags         . ,(article-tags it))
+      (:self-link    . ,(article-self-link it (current-site)))
       (:content      . nil))))
+
+(defmethod collect-context ((object site))
+  (let ((it object))
+    `((:site-name  . ,(site-name it))
+      (:site-title . ,(title it))
+      (:baseurl    . ,(site-baseurl it)))))
 
 ;;; article.lisp ends here
 

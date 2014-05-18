@@ -1,6 +1,5 @@
 * Resource file in template directory
 * Better header handling
-* context protocol
 * split templates to header, footor, etc.
 * cache mustache renderer
 * documentation

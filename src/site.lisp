@@ -96,12 +96,6 @@
          (mapc #'add-file-to-list (uiop:directory-files dir)))))
     list))
 
-(defun context-from-site (site)
-  (let ((it site))
-    `((:site-name  . ,(site-name it))
-      (:site-title . ,(title it))
-      (:baseurl    . ,(site-baseurl it)))))
-
 ;;; config.lisp ends here
 
 ;;; Local Variables:

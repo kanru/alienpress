@@ -9,7 +9,7 @@
                (:module "src"
                 :depends-on ("packages")
                 :components ((:file "alienpress"   :depends-on ("site"))
-                             (:file "article"      :depends-on ("file"))
+                             (:file "article"      :depends-on ("file" "site"))
                              (:file "file")
                              (:file "site"         :depends-on ("utils"))
                              (:file "utils"))))
