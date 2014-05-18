@@ -31,14 +31,7 @@
 
 (defclass file ()
   ((path :initarg :path
-         :reader file-path)
-   (mtime :reader file-mtime)))
-
-(defmethod initialize-instance :after ((instance file) &rest initargs)
-  (declare (ignore initargs))
-  (with-slots (mtime path)
-      instance
-    (setf mtime (file-write-date path))))
+         :reader file-path)))
 
 (defmethod print-object ((object file) stream)
   (print-unreadable-object (object stream :type t :identity t)
