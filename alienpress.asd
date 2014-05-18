@@ -22,4 +22,5 @@
                "cl-markdown"
                "cl-mustache"
                "split-sequence"
+               "local-time"
                "cl-date-time-parser"))
