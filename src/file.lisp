@@ -97,6 +97,15 @@
                                    :directory (pathname-directory destdir))))
   (values))
 
+(defgeneric file-modified-p (file site)
+  (:documentation "Return a generalized boolean whether source file is newer."))
+
+(defmethod file-modified-p ((file file) site)
+  (let ((src (file-path file))
+        (dst (file-dest-path file site)))
+    (> (or (uiop:safe-file-write-date src) 0)
+       (or (uiop:safe-file-write-date dst) 0))))
+
 ;;; file.lisp ends here
 
 ;;; Local Variables:

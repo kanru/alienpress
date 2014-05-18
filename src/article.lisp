@@ -50,6 +50,15 @@
 (defun current-articles ()
   (sort-articles (remove-if-not #'articlep *current-file-list*)))
 
+(defun articles-in-range (article)
+  (loop :for ar :in (current-articles)
+        :for index :upto (article-blog-limit article)
+        :when (and (>= (article-publish-time ar)
+                       (article-blog-after article))
+                   (< (article-publish-time ar)
+                      (article-blog-before article)))
+          :collect ar))
+
 (defclass article (file)
   ((title        :initform "" :accessor article-title)
    (publish-time :initform () :accessor article-publish-time)
@@ -136,6 +145,15 @@
                    (cl-date-time-parser:parse-date-time body))))))))
   (values))
 
+(defmethod file-modified-p ((article article) site)
+  (if (or (string= "blog" (article-type article))
+          (string= "rss"  (article-type article)))
+      (or (call-next-method)
+          (some (lambda (ar)
+                  (file-modified-p ar site))
+                (articles-in-range article)))
+      (call-next-method)))
+
 (defun article-self-link (article site)
   (let ((destpath (file-dest-path article site))
         (destdir  (site-destdir site))
@@ -175,15 +193,11 @@
     (when (or (string= "blog" (article-type article))
               (string= "rss"  (article-type article)))
       (with-output-to-string (datum)
-        (loop :for ar :in (current-articles)
-              :for index :upto (article-blog-limit article)
-              :when (and (>= (article-publish-time ar)
-                             (article-blog-after article))
-                         (< (article-publish-time ar)
-                            (article-blog-before article)))
-                :do (article-render
-                     ar (current-site) datum
-                     (format nil "~a-inline" (article-type article))))
+        (mapc (lambda (ar)
+                (article-render
+                 ar (current-site) datum
+                 (format nil "~a-inline" (article-type article))))
+              (articles-in-range article))
         (setf context (acons :inline-content
                              (get-output-stream-string datum) context))))
     (write-string (apply-template template context) stream))

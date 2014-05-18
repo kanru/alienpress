@@ -30,11 +30,17 @@
 
 (in-package #:alienpress)
 
-(defvar *verbose* t
+(defvar *verbose* 2
   "Enable verbose output if non-nil")
 
-(defun info (control-string &rest args)
-  (when *verbose*
+(defun log-i (control-string &rest args)
+  (when (>= *verbose* 2)
+    (format t "; ")
+    (apply #'format t control-string args)
+    (fresh-line)))
+
+(defun log-d (control-string &rest args)
+  (when (>= *verbose* 3)
     (format t "; ")
     (apply #'format t control-string args)
     (fresh-line)))
@@ -45,11 +51,15 @@
     (mapc #'file-upgrade-type *current-file-list*)
     (mapc #'file-collect-metadata *current-file-list*)
     (mapc (lambda (file)
-            (info "compiling file ~A" (file-path file))
-            (file-render file site)
-            (info "~A written" (file-dest-path file site)))
+            (cond
+              ((file-modified-p file site)
+               (log-i "compiling file ~A" (file-path file))
+               (file-render file site)
+               (log-i "~A written" (file-dest-path file site)))
+              (t
+               (log-d "skip ~A" (file-path file)))))
           *current-file-list*)
-    (info "finished."))
+    (log-i "finished."))
   (values))
 
 (defun load-config-file (path)
