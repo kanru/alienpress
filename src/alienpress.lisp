@@ -48,7 +48,6 @@
 (defun compile-site (site &optional force)
   (let ((*current-site* site)
         (*current-file-list* (mapcar #'make-file (site-source-files site))))
-    (mapc #'file-upgrade-type *current-file-list*)
     (mapc #'file-collect-metadata *current-file-list*)
     (mapc (lambda (file)
             (log-i "compiling file ~A" (file-path file))

@@ -45,14 +45,10 @@
     (princ (file-path object) stream)))
 
 (defun make-file (path)
-  (make-instance 'file :path path))
-
-(defun file-upgrade-type (file)
-  "Upgrade FILE's type according to it's `pathname-type'."
-  (let ((type (assoc (pathname-type (file-path file))
+  "Create file instance according to the `pathname-type'."
+  (let ((type (assoc (pathname-type path)
                      *file-type-alist* :test #'equalp)))
-    (when type
-      (change-class file (cdr type)))))
+    (make-instance (or (cdr type) 'file) :path path)))
 
 (defun file-name (file)
   (pathname-name (file-path file)))
