@@ -3,5 +3,4 @@
 * split templates to header, footor, etc.
 * documentation
 * command line interface
-* default lambda context for dates
 * extension method

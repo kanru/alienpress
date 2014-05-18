@@ -244,19 +244,35 @@
   (merge-pathnames (article-template article)
                    (site-template-dir site)))
 
+(defun to-rfc1123-timestring (timestring)
+  (local-time:to-rfc1123-timestring
+   (local-time:universal-to-timestamp
+    (if (integerp timestring)
+        timestring
+        (date-time-parser:parse-date-time
+         (mustache:render* timestring mustache:*context*))))))
+
+(defun to-rfc3339-timestring (timestring)
+  (local-time:to-rfc3339-timestring
+   (local-time:universal-to-timestamp
+    (if (integerp timestring)
+        timestring
+        (date-time-parser:parse-date-time
+         (mustache:render* timestring mustache:*context*))))))
+
 (defgeneric collect-context (object)
   (:documentation "Return an alist of contexts from OBJECT."))
 
 (defmethod collect-context ((object article))
   (let ((it object))
     `((:title        . ,(article-title it))
-      (:publish-time . ,(local-time:to-rfc1123-timestring
-                         (local-time:universal-to-timestamp
-                          (article-publish-time it))))
-      (:update-time  . ,(local-time:to-rfc3339-timestring
-                         (local-time:universal-to-timestamp
-                          (or (article-update-time it)
-                              (article-publish-time it)))))
+      (:publish-time . ,(to-rfc1123-timestring
+                         (article-publish-time it)))
+      (:update-time  . ,(to-rfc1123-timestring
+                         (or (article-update-time it)
+                             (article-publish-time it))))
+      (:rfc1123      . ,#'to-rfc1123-timestring)
+      (:rfc3339      . ,#'to-rfc3339-timestring)
       (:uuid         . ,(article-uuid it))
       (:tags         . ,(article-tags it))
       (:self-link    . ,(article-self-link it (current-site)))
