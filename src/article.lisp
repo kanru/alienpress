@@ -174,8 +174,15 @@
   (with-output-to-string (datum)
     (markdown:markdown markdown :stream datum)))
 
+(defvar *template-cache* (make-hash-table :test #'equal))
+
 (defun apply-template (template context)
-  (mustache:render* template context))
+  (let ((renderer (gethash template *template-cache*)))
+    (unless renderer
+      (setf (gethash template *template-cache*)
+            (setf renderer (mustache:compile-template template))))
+    (with-output-to-string (out)
+      (funcall renderer context out))))
 
 (defun template-path (template site)
   (merge-pathnames template
