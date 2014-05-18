@@ -8,10 +8,14 @@
   :components ((:file "packages" :pathname "src/packages")
                (:module "src"
                 :depends-on ("packages")
-                :components ((:file "alienpress"   :depends-on ("site"))
-                             (:file "article"      :depends-on ("file" "site"))
-                             (:file "file")
-                             (:file "site"         :depends-on ("utils"))
+                :components ((:file "alienpress"
+                              :depends-on ("article" "file" "site"))
+                             (:file "article"
+                              :depends-on ("file" "site" "utils"))
+                             (:file "file"
+                              :depends-on ("utils"))
+                             (:file "site"
+                              :depends-on ("utils"))
                              (:file "utils"))))
   :depends-on ("alexandria"
                "uiop"
