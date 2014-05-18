@@ -45,14 +45,14 @@
     (apply #'format t control-string args)
     (fresh-line)))
 
-(defun compile-site (site)
+(defun compile-site (site &optional force)
   (let ((*current-site* site)
         (*current-file-list* (mapcar #'make-file (site-source-files site))))
     (mapc #'file-upgrade-type *current-file-list*)
     (mapc #'file-collect-metadata *current-file-list*)
     (mapc (lambda (file)
             (cond
-              ((file-modified-p file site)
+              ((or (file-modified-p file site) force)
                (log-i "compiling file ~A" (file-path file))
                (file-render file site)
                (log-i "~A written" (file-dest-path file site)))
@@ -67,8 +67,8 @@
     ;; XXX security
     (load path)))
 
-(defun compile-all-sites ()
-  (mapc #'compile-site *site-list*)
+(defun compile-all-sites (&optional force)
+  (mapc #'(lambda (site) (compile-site site force)) *site-list*)
   (values))
 
 ;;; alienpress.lisp ends here
