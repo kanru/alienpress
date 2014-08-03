@@ -189,7 +189,9 @@
                    (site-template-dir site)))
 
 (defun article-render (article site &optional (stream *standard-output*) template)
-  (let* ((template (or (and template
+  (let* ((mustache:*load-path*
+           (cons (site-template-dir site) mustache:*load-path*))
+         (template (or (and template
                             (template-path template site))
                        (article-template-path article site)))
          (*current-article* article)
